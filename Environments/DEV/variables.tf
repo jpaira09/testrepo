@@ -16,3 +16,4 @@ variable "tmap_bucket" {
 variable "region" {
   type = string
 }
+
