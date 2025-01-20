@@ -8,6 +8,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      # This permission block is required to be able to get the OIDC credential
+      id-token: write
+      contents: read
     
     steps:
       - name: Checkout code
