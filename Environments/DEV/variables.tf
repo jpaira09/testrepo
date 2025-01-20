@@ -7,6 +7,7 @@ variable "common_tags" {
   }
 }
 
+
 variable "tmap_bucket" {
   description = "bucket for TMAP team"
   type = string
