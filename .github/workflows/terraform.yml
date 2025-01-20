@@ -23,37 +23,24 @@ jobs:
         with:
           terraform_version: '1.10.2'
 
-      - name: Print GitHub commit SHAs
+      - name: Check changed files in the latest commit
         run: |
-          echo "Before Commit SHA: ${{ github.event.before }}"
-          echo "Current Commit SHA: ${{ github.sha }}"
+          echo "Changed files in the latest commit:"
+          git diff --name-only HEAD^ HEAD
+          echo "Checking for changes in Environments directories"
 
-      - name: Check changed files
-        run: |
-          # Ensure the before commit exists, fallback to HEAD^ if not
-          if [ -z "${{ github.event.before }}" ]; then
-            echo "No 'before' commit found, comparing HEAD with HEAD^"
-            git diff --name-only HEAD^ HEAD
-          else
-            echo "Comparing changes between ${GITHUB_EVENT_BEFORE} and ${GITHUB_SHA}"
-            git diff --name-only ${{ github.event.before }} ${{ github.sha }}
-          fi
+          # Check for any changes in the relevant environment directories
+          changed_files=$(git diff --name-only HEAD^ HEAD | grep -E '^Environments/(DEV|UAT|QA|PROD)/')
 
-      - name: Check for Changes and Deploy to Environment
-        run: |
-          # Determine which environment has changed
-          if [ -z "${{ github.event.before }}" ]; then
-            changed_dir=$(git diff --name-only HEAD^ HEAD | grep -E '^Environments/(DEV|UAT|QA|PROD)/' | head -n 1)
-          else
-            changed_dir=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^Environments/(DEV|UAT|QA|PROD)/' | head -n 1)
-          fi
-
-          if [[ -z "$changed_dir" ]]; then
+          if [[ -z "$changed_files" ]]; then
             echo "No relevant environment changes detected. Skipping deployment."
             exit 0
           fi
 
-          # Set the environment based on the modified directory
+          echo "Changes detected in files: $changed_files"
+
+          # Determine the environment based on the modified directory
+          changed_dir=$(echo "$changed_files" | head -n 1)
           environment=$(echo "$changed_dir" | cut -d'/' -f2)
 
           echo "Changes detected in environment: $environment"
