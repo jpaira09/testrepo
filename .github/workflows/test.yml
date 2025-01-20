@@ -39,7 +39,8 @@ jobs:
           echo "Changes detected in environment: $environment"
 
           # Fetch the environment-specific role ARN from GitHub Environment secrets
-          ROLE_ARN=${{ secrets["ROLE_ARN_${environment^^}"] }}  # Fetch from GitHub Secrets
+          SECRET_NAME="ROLE_ARN_${environment^^}"
+          ROLE_ARN=${{ secrets[SECRET_NAME] }}  # Fetch from GitHub Secrets
 
           if [[ -z "$ROLE_ARN" ]]; then
             echo "Error: No role ARN found for environment '$environment'."
