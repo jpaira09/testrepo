@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Ensure full history for git diff comparison
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
@@ -25,19 +27,17 @@ jobs:
 
       - name: Check changed files in the latest commit
         run: |
-          echo "Changed files in the latest commit:"
-          git diff --name-only HEAD^ HEAD
           echo "Checking for changes in Environments directories"
-
-          # Check for any changes in the relevant environment directories
-          changed_files=$(git diff --name-only HEAD^ HEAD | grep -E '^Environments/(DEV|UAT|QA|PROD)/')
+          
+          # Check for changes in the relevant environment directories
+          changed_files=$(git diff --name-only HEAD^ HEAD || git diff --name-only HEAD)
 
           if [[ -z "$changed_files" ]]; then
             echo "No relevant environment changes detected. Skipping deployment."
             exit 0
           fi
 
-          echo "Changes detected in files: $changed_files"
+          echo "Changed files: $changed_files"
 
           # Determine the environment based on the modified directory
           changed_dir=$(echo "$changed_files" | head -n 1)
