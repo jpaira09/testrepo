@@ -23,6 +23,11 @@ jobs:
           role-to-assume: arn:aws:iam::778737183137:role/mygithubrole  # Replace with your IAM Role ARN
           aws-region: ap-south-1  # Replace with your AWS region
 
+      - name: Echo AWS credentials (for debugging purposes)
+        run: |
+          echo "AWS Access Key ID: ${{ secrets.AWS_ACCESS_KEY_ID }}"
+          echo "AWS Secret Access Key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+
       - name: Run a test command to verify IAM role
         run: |
           aws sts get-caller-identity
