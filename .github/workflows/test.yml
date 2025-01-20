@@ -1,4 +1,4 @@
-name: Terraform Deploy to Environment
+name: Terraform test
 
 on:
   push:
