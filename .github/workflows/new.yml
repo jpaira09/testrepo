@@ -1,0 +1,83 @@
+name: Terraform new
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Environments/DEV/**'
+      - 'Environments/UAT/**'
+      - 'Environments/QA/**'
+      - 'Environments/PROD/**'
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read  # To read workflow-related information
+      id-token: write  # To authenticate with OIDC (AWS role assumption)
+      contents: read
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Ensure full history for git diff comparison
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.10.2'
+
+      - name: Check for changes in environment directories
+        run: |
+          echo "Checking for changes in Environments directories"
+          
+          # Check for changes in the relevant environment directories
+          changed_files=$(git diff --name-only HEAD^ HEAD || git diff --name-only HEAD)
+
+          if [[ -z "$changed_files" ]]; then
+            echo "No relevant environment changes detected. Skipping deployment."
+            exit 0
+          fi
+
+          echo "Changed files: $changed_files"
+
+          # Determine the environment based on the modified directory
+          changed_dir=$(echo "$changed_files" | head -n 1)
+          environment=$(echo "$changed_dir" | cut -d'/' -f2)
+
+          echo "Changes detected in environment: $environment"
+
+          # Set environment-specific secrets dynamically
+          echo "Setting up secrets for environment: $environment"
+          echo "environment=$environment" >> $GITHUB_ENV
+
+      - name: Set up AWS credentials using GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets["ROLE_ARN_${{ env.environment }}"] }}
+          aws-region: ap-south-1  # Replace with your region
+
+      # Dynamically fetch secrets for the environment and pass them as TF variables
+      - name: Set environment-specific Terraform variables
+        run: |
+          echo "Using secrets for environment: ${{ env.environment }}"
+          for var in $(env | grep "TF_VAR_" | cut -d= -f1); do
+            echo "$var=${{ secrets["$var"_"${{ env.environment }}"] }}" >> $GITHUB_ENV
+          done
+
+      - name: Initialize Terraform
+        run: |
+          cd Environments/${{ env.environment }}
+          terraform init
+
+      - name: Terraform Plan
+        run: |
+          cd Environments/${{ env.environment }}
+          terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        run: |
+          cd Environments/${{ env.environment }}
+          terraform apply -auto-approve tfplan
