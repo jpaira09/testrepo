@@ -13,6 +13,7 @@ variable "tmap_bucket" {
   default = "prism-tmap-dev"
 }
 
+
 variable "region" {
   type = string
 }
