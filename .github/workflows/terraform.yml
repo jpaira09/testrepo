@@ -1,0 +1,68 @@
+name: Terraform deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Environments/DEV/**'  # Trigger on changes in DEV environment directory
+      - 'Environments/UAT/**'  # Trigger on changes in staging environment directory
+      - 'Environments/QA/**'  # Trigger on changes in prod environment directory
+      - 'Environments/PROD/**'  # Trigger on changes in test environment directory
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: '1.10.2'  # Your Terraform version
+
+      - name: Check for Changes and Deploy to Environment
+        run: |
+          # Determine which environment has changed
+          changed_dir=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^Environments/(DEV|UAT|QA|PROD)/' | head -n 1)
+
+          if [[ -z "$changed_dir" ]]; then
+            echo "No relevant environment changes detected. Skipping deployment."
+            exit 0
+          fi
+
+          # Set the environment based on the modified directory
+          environment=$(echo "$changed_dir" | cut -d'/' -f2)
+
+          echo "Changes detected in environment: $environment"
+
+          # Map environment to appropriate secret name
+          if [ "$environment" == "DEV" ]; then
+            ROLE_ARN=${{ secrets.ROLE_ARN_DEV }}
+          elif [ "$environment" == "UAT" ]; then
+            ROLE_ARN=${{ secrets.ROLE_ARN_UAT }}
+          elif [ "$environment" == "QA" ]; then
+            ROLE_ARN=${{ secrets.ROLE_ARN_QA }}
+          elif [ "$environment" == "PROD" ]; then
+            ROLE_ARN=${{ secrets.ROLE_ARN_PROD }}
+          else
+            echo "Error: Unknown environment '$environment'."
+            exit 1
+          fi
+
+          echo "Assuming role: $ROLE_ARN"
+
+          # Configure AWS credentials using GitHub OIDC
+          - name: Set up AWS credentials using GitHub OIDC
+            uses: aws-actions/configure-aws-credentials@v1
+            with:
+              role-to-assume: $ROLE_ARN
+              aws-region: ap-south-1  # Replace with your region
+
+          # Run Terraform commands for the detected environment
+          cd Environments/$environment
+          terraform init
+          terraform plan -out=tfplan
+          terraform apply -auto-approve tfplan
