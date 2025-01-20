@@ -1,0 +1,24 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Set up AWS credentials using GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::778737183137:role/mygithubrole  # Replace with your IAM Role ARN
+          aws-region: ap-south-1  # Replace with your AWS region
+
+      - name: Run a test command to verify IAM role
+        run: |
+          aws sts get-caller-identity
