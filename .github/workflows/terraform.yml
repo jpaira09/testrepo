@@ -30,18 +30,30 @@ jobs:
 
       - name: Check changed files
         run: |
-          echo "Changed files:"
-          git diff --name-only ${{ github.event.before }} ${{ github.sha }}
+          # Ensure the before commit exists, fallback to HEAD^ if not
+          if [ -z "${{ github.event.before }}" ]; then
+            echo "No 'before' commit found, comparing HEAD with HEAD^"
+            git diff --name-only HEAD^ HEAD
+          else
+            echo "Comparing changes between ${GITHUB_EVENT_BEFORE} and ${GITHUB_SHA}"
+            git diff --name-only ${{ github.event.before }} ${{ github.sha }}
+          fi
 
       - name: Check for Changes and Deploy to Environment
         run: |
-          changed_dir=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^Environments/(DEV|UAT|QA|PROD)/' | head -n 1)
+          # Determine which environment has changed
+          if [ -z "${{ github.event.before }}" ]; then
+            changed_dir=$(git diff --name-only HEAD^ HEAD | grep -E '^Environments/(DEV|UAT|QA|PROD)/' | head -n 1)
+          else
+            changed_dir=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^Environments/(DEV|UAT|QA|PROD)/' | head -n 1)
+          fi
 
           if [[ -z "$changed_dir" ]]; then
             echo "No relevant environment changes detected. Skipping deployment."
             exit 0
           fi
 
+          # Set the environment based on the modified directory
           environment=$(echo "$changed_dir" | cut -d'/' -f2)
 
           echo "Changes detected in environment: $environment"
