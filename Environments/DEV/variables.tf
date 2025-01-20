@@ -3,7 +3,6 @@ variable "common_tags" {
   type        = map(string)
   default = {
     Environment = "Dev"
-    Team        = "MW"
     Terraform   = "True"
   }
 }
@@ -13,6 +12,7 @@ variable "tmap_bucket" {
   type = string
   default = "prism-tmap-dev"
 }
+
 
 variable "region" {
   type = string
