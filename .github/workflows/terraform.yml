@@ -1,14 +1,14 @@
-name: Terraform deploy
+name: Terraform test
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'Environments/DEV/**'  # Trigger on changes in DEV environment directory
-      - 'Environments/UAT/**'  # Trigger on changes in staging environment directory
-      - 'Environments/QA/**'  # Trigger on changes in prod environment directory
-      - 'Environments/PROD/**'  # Trigger on changes in test environment directory
+      - 'Environments/DEV/**'
+      - 'Environments/UAT/**'
+      - 'Environments/QA/**'
+      - 'Environments/PROD/**'
 
 jobs:
   terraform:
@@ -21,11 +21,20 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: '1.10.2'  # Your Terraform version
+          terraform_version: '1.10.2'
+
+      - name: Print GitHub commit SHAs
+        run: |
+          echo "Before Commit SHA: ${{ github.event.before }}"
+          echo "Current Commit SHA: ${{ github.sha }}"
+
+      - name: Check changed files
+        run: |
+          echo "Changed files:"
+          git diff --name-only ${{ github.event.before }} ${{ github.sha }}
 
       - name: Check for Changes and Deploy to Environment
         run: |
-          # Determine which environment has changed
           changed_dir=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E '^Environments/(DEV|UAT|QA|PROD)/' | head -n 1)
 
           if [[ -z "$changed_dir" ]]; then
@@ -33,12 +42,11 @@ jobs:
             exit 0
           fi
 
-          # Set the environment based on the modified directory
           environment=$(echo "$changed_dir" | cut -d'/' -f2)
 
           echo "Changes detected in environment: $environment"
 
-          # Map environment to appropriate secret name
+          # Map environment to the appropriate secret name
           if [ "$environment" == "DEV" ]; then
             ROLE_ARN=${{ secrets.ROLE_ARN_DEV }}
           elif [ "$environment" == "UAT" ]; then
