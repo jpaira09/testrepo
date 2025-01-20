@@ -13,6 +13,10 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
+    permissions:
+      actions: read  # To read workflow-related information
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout Code
