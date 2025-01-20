@@ -1,4 +1,4 @@
-name: Terraform new
+name: Terraform test
 
 on:
   push:
@@ -50,22 +50,35 @@ jobs:
           echo "Changes detected in environment: $environment"
 
           # Set environment-specific secrets dynamically
-          echo "Setting up secrets for environment: $environment"
           echo "environment=$environment" >> $GITHUB_ENV
 
       - name: Set up AWS credentials using GitHub OIDC
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets["ROLE_ARN_${{ env.environment }}"] }}
+          role-to-assume: ${{ secrets["ROLE_ARN_" + env.environment] }}
           aws-region: ap-south-1  # Replace with your region
 
-      # Dynamically fetch secrets for the environment and pass them as TF variables
       - name: Set environment-specific Terraform variables
         run: |
+          # Dynamically set TF_VAR_* secrets from GitHub Secrets
           echo "Using secrets for environment: ${{ env.environment }}"
-          for var in $(env | grep "TF_VAR_" | cut -d= -f1); do
-            echo "$var=${{ secrets["$var"_"${{ env.environment }}"] }}" >> $GITHUB_ENV
-          done
+
+          if [[ "${{ env.environment }}" == "DEV" ]]; then
+            echo "TF_VAR_db_password=${{ secrets.TF_VAR_DB_PASSWORD_DEV }}" >> $GITHUB_ENV
+            echo "TF_VAR_api_key=${{ secrets.TF_VAR_API_KEY_DEV }}" >> $GITHUB_ENV
+          elif [[ "${{ env.environment }}" == "UAT" ]]; then
+            echo "TF_VAR_db_password=${{ secrets.TF_VAR_DB_PASSWORD_UAT }}" >> $GITHUB_ENV
+            echo "TF_VAR_api_key=${{ secrets.TF_VAR_API_KEY_UAT }}" >> $GITHUB_ENV
+          elif [[ "${{ env.environment }}" == "QA" ]]; then
+            echo "TF_VAR_db_password=${{ secrets.TF_VAR_DB_PASSWORD_QA }}" >> $GITHUB_ENV
+            echo "TF_VAR_api_key=${{ secrets.TF_VAR_API_KEY_QA }}" >> $GITHUB_ENV
+          elif [[ "${{ env.environment }}" == "PROD" ]]; then
+            echo "TF_VAR_db_password=${{ secrets.TF_VAR_DB_PASSWORD_PROD }}" >> $GITHUB_ENV
+            echo "TF_VAR_api_key=${{ secrets.TF_VAR_API_KEY_PROD }}" >> $GITHUB_ENV
+          else
+            echo "Error: Unknown environment '${{ env.environment }}'."
+            exit 1
+          fi
 
       - name: Initialize Terraform
         run: |
