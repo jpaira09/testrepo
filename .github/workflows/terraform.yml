@@ -25,6 +25,10 @@ jobs:
         with:
           terraform_version: '1.10.2'
 
+      - name: check role
+        run: |
+          ARN=${{ secrets.ROLE_ARN_DEV }}
+          echo "Role: $ARN"
       - name: Check changed files in the latest commit
         run: |
           echo "Checking for changes in Environments directories"
@@ -60,6 +64,12 @@ jobs:
           fi
 
           echo "Assuming role: $ROLE_ARN"
+
+          # Debugging: Check if ROLE_ARN is correctly set
+          if [ -z "$ROLE_ARN" ]; then
+            echo "Error: ROLE_ARN is empty for environment '$environment'."
+            exit 1
+          fi
 
           # Configure AWS credentials using GitHub OIDC
           - name: Set up AWS credentials using GitHub OIDC
