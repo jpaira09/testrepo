@@ -5,10 +5,10 @@ on:
     branches:
       - main
     paths:
-      - 'environments/DEV/**'  # Trigger on changes in DEV environment directory
-      - 'environments/UAT/**'  # Trigger on changes in staging environment directory
-      - 'environments/QA/**'  # Trigger on changes in prod environment directory
-      - 'environments/PROD/**'  # Trigger on changes in test environment directory
+      - 'Environments/DEV/**'  # Trigger on changes in DEV environment directory
+      - 'Environments/UAT/**'  # Trigger on changes in staging environment directory
+      - 'Environments/QA/**'  # Trigger on changes in prod environment directory
+      - 'Environments/PROD/**'  # Trigger on changes in test environment directory
 
 jobs:
   terraform:
