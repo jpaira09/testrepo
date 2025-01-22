@@ -8,7 +8,7 @@ concurrency:
   group: rw-aws-dtcn-spoke-deploy
   cancel-in-progress: true
 
-# this permission is required by dtcloud-actions/aws/login
+# This permission is required by dtcloud-actions/aws/login
 permissions: write-all
 
 jobs:
@@ -16,26 +16,25 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.environment }}
- 
+    
     steps:
-
       - name: Check out repository
         uses: actions/checkout@v4
 
-      # https://github.com/hashicorp/setup-terraform
+      # Set up Terraform
       - uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: '1.10.2'
 
       - name: Set up AWS credentials using GitHub OIDC
-      - uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{secrets.ROLE_ARN}}
+          role-to-assume: ${{ secrets.ROLE_ARN }}
           aws-region: ap-south-1   
 
       - name: Terraform Init
         run: |
-          cd Environments/$environment
+          cd Environments/${{ inputs.environment }}
           terraform init 
 
       - name: Terraform Validate
