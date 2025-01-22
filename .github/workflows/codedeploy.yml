@@ -42,7 +42,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: arn:aws:iam::778737183137:role/mygithubrole
-          aws-region: ap-south-1   
+          aws-region: ${{ vars.TF_VAR_REGION }}   
 
       - name: Terraform Init
         run: |
@@ -60,7 +60,9 @@ jobs:
 
       - name: Terraform Apply
         if: ${{ inputs.terraform_command_type == 'apply -auto-approve' }}
-        run: terraform apply -auto-approve
+        run: |
+          cd Environments/${{ inputs.environment }}
+          terraform apply -auto-approve
 
       - name: Terraform Destroy
         if: ${{ inputs.terraform_command_type == 'destroy -auto-approve' }}
