@@ -43,7 +43,13 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::778737183137:role/mygithubrole
           aws-region: ${{ vars.TF_VAR_REGION }}   
-
+      - name: Export GitHub environment variables
+        run: |
+          echo "Exporting environment variables..."
+          # Export environment variables matching TF_VAR_ prefix for Terraform
+          for var in $(printenv | grep -o '^TF_VAR_.*' | cut -d= -f1); do
+            echo "$var=${!var}" >> $GITHUB_ENV
+          done
       - name: Terraform Init
         run: |
           cd Environments/${{ inputs.environment }}
@@ -66,4 +72,6 @@ jobs:
 
       - name: Terraform Destroy
         if: ${{ inputs.terraform_command_type == 'destroy -auto-approve' }}
-        run: terraform destroy -auto-approve
+        run: |
+          cd Environments/${{ inputs.environment }}
+          terraform destroy -auto-approve
