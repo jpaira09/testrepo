@@ -7,7 +7,7 @@ on:
         description: 'Select the environment to deploy (dev, prod, etc.)'
         type: choice
         options:
-          - dev
+          - DEV
           - prod
           - staging
         required: true
