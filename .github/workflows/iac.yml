@@ -1,0 +1,30 @@
+name: Infrastructure as Code
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select the environment to deploy (dev, prod, etc.)'
+        type: choice
+        options:
+          - dev
+          - prod
+          - staging
+        required: true
+      terraform_command_type:
+        description: 'Select the Terraform command to run'
+        type: choice
+        options:
+          - plan
+          - validate
+          - apply -auto-approve
+          - destroy -auto-approve
+        required: true
+
+jobs:
+  workflow_job:
+    secrets: inherit
+    uses: .github/workflows/codedeploy.yml@#SLUG_RepoRef
+    with:
+      environment: ${{ inputs.environment }}
+      terraform_command_type: ${{ inputs.terraform_command_type }}
