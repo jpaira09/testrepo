@@ -20,7 +20,7 @@ on:
           - apply -auto-approve
           - destroy -auto-approve
         required: true
-
+permissions: write-all
 jobs:
   workflow_job:
     secrets: inherit
