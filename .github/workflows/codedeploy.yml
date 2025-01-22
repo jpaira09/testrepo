@@ -2,6 +2,13 @@ name: AWS codedeploy
 
 on:
   workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      terraform_command_type:
+        required: true
+        type: string
 
 # Allow one concurrent deployment
 concurrency:
