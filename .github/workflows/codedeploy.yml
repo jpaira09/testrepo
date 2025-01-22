@@ -27,7 +27,12 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-
+      - name: check env
+        run: |
+          echo "Role: ${{ secrets.ROLE_ARN }}"
+          echo "Role: ${{ vars.TF_VAR_REGION }}"
+       
+       
       # Set up Terraform
       - uses: hashicorp/setup-terraform@v3
         with:
