@@ -16,5 +16,6 @@ variable "tmap_bucket" {
 
 variable "region" {
   type = string
+  default = "ap-south-1"
 }
 
