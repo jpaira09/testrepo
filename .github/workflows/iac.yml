@@ -24,7 +24,7 @@ on:
 jobs:
   workflow_job:
     secrets: inherit
-    uses: .github/workflows/codedeploy.yml@#SLUG_RepoRef
+    uses: ./.github/workflows/codedeploy.yml
     with:
       environment: ${{ inputs.environment }}
       terraform_command_type: ${{ inputs.terraform_command_type }}
