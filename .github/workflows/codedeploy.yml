@@ -54,7 +54,9 @@ jobs:
 
       - name: Terraform Plan
         if: ${{ inputs.terraform_command_type == 'plan' }}
-        run: terraform plan
+        run: |
+          cd Environments/${{ inputs.environment }}
+          terraform plan
 
       - name: Terraform Apply
         if: ${{ inputs.terraform_command_type == 'apply -auto-approve' }}
