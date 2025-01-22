@@ -1,0 +1,54 @@
+name: AWS codedeploy
+
+on:
+  workflow_call:
+
+# Allow one concurrent deployment
+concurrency:
+  group: rw-aws-dtcn-spoke-deploy
+  cancel-in-progress: true
+
+# this permission is required by dtcloud-actions/aws/login
+permissions: write-all
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+ 
+    steps:
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # https://github.com/hashicorp/setup-terraform
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.10.2'
+
+      - name: Set up AWS credentials using GitHub OIDC
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{secrets.ROLE_ARN}}
+          aws-region: ap-south-1   
+
+      - name: Terraform Init
+        run: |
+          cd Environments/$environment
+          terraform init 
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        if: ${{ inputs.terraform_command_type == 'plan' }}
+        run: terraform plan
+
+      - name: Terraform Apply
+        if: ${{ inputs.terraform_command_type == 'apply -auto-approve' }}
+        run: terraform apply -auto-approve
+
+      - name: Terraform Destroy
+        if: ${{ inputs.terraform_command_type == 'destroy -auto-approve' }}
+        run: terraform destroy -auto-approve
