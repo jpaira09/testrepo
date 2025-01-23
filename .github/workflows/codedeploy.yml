@@ -24,7 +24,7 @@ jobs:
     environment:
       name: ${{ inputs.environment }}
     env: 
-      TF_VAR_region: ${{env.TF_VAR_region}}
+      TF_VAR_region: ${{vars.TF_VAR_REGION}}
       ROLE_ARN_DEV: ${{secrets.ROLE_ARN_DEV}}
     
     steps:
