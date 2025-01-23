@@ -50,10 +50,12 @@ jobs:
           for var in $(printenv | grep -o '^TF_VAR_.*' | cut -d= -f1); do
             echo "$var=${!var}" >> $GITHUB_ENV
           done
-      - name: Debug environment variables
-        run: |
           echo "Debugging environment variables..."
           printenv | grep 'TF_VAR_'
+      #- name: Debug environment variables
+      #  run: |
+      #    echo "Debugging environment variables..."
+      #    printenv | grep 'TF_VAR_'
 
       - name: Terraform Init
         run: |
