@@ -23,14 +23,17 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.environment }}
+    env: 
+      TF_VAR_REGION: ${{var.TF_VAR_REGION}}
+      ROLE_ARN_DEV: ${{secrets.ROLE_ARN_DEV}}
     
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
       - name: check env
         run: |
-          echo "Role: ${{ secrets.ROLE_ARN }}"
-          echo "Role: ${{ vars.TF_VAR_REGION }}"
+          echo "Role: $ROLE_ARN_DEV"
+          echo "Region: $TF_VAR_REGION"
        
        
       # Set up Terraform
@@ -41,21 +44,8 @@ jobs:
       - name: Set up AWS credentials using GitHub OIDC
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: arn:aws:iam::778737183137:role/mygithubrole
-          aws-region: ${{ vars.TF_VAR_REGION }}   
-      - name: Export GitHub environment variables
-        run: |
-          echo "Exporting environment variables..."
-          # Export environment variables matching TF_VAR_ prefix for Terraform
-          for var in $(printenv | grep -o '^TF_VAR_.*' | cut -d= -f1); do
-            echo "$var=${!var}" >> $GITHUB_ENV
-          done
-          echo "Debugging environment variables..."
-          printenv | grep 'TF_VAR_'
-      #- name: Debug environment variables
-      #  run: |
-      #    echo "Debugging environment variables..."
-      #    printenv | grep 'TF_VAR_'
+          role-to-assume: $ROLE_ARN_DEV
+          aws-region: $TF_VAR_REGION   
 
       - name: Terraform Init
         run: |
