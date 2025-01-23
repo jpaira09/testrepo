@@ -24,7 +24,7 @@ jobs:
     environment:
       name: ${{ inputs.environment }}
     env: 
-      TF_VAR_REGION: ${{var.TF_VAR_REGION}}
+      TF_VAR_region: ${{var.TF_VAR_REGION}}
       ROLE_ARN_DEV: ${{secrets.ROLE_ARN_DEV}}
     
     steps:
@@ -33,7 +33,7 @@ jobs:
       - name: check env
         run: |
           echo "Role: $ROLE_ARN_DEV"
-          echo "Region: $TF_VAR_REGION"
+          echo "Region: $TF_VAR_region"
        
        
       # Set up Terraform
@@ -45,7 +45,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v1
         with:
           role-to-assume: $ROLE_ARN_DEV
-          aws-region: $TF_VAR_REGION   
+          aws-region: $TF_VAR_region   
 
       - name: Terraform Init
         run: |
