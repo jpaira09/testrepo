@@ -18,6 +18,6 @@ variable "region" {
   type = string
 }
 
-variable "vpc_name" {
+variable "VPC_NAME" {
   type = string
 }
