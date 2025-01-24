@@ -1,0 +1,62 @@
+name: Terraform PR check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Terraform Format Check
+        id: fmt
+        run: |
+          terraform fmt -check
+        continue-on-error: true  # Allow failure so the workflow can continue
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+        continue-on-error: true  # Allow failure so the workflow can continue
+
+      - name: Check for changes in environment directories
+        run: |
+          echo "Checking for changes in Environments directories"
+          
+          # Check for changes in the relevant environment directories
+          changed_files=$(git diff --name-only HEAD^ HEAD || git diff --name-only HEAD)
+
+          if [[ -z "$changed_files" ]]; then
+            echo "No relevant environment changes detected. Skipping deployment."
+            exit 0
+          fi
+
+          echo "Changed files: $changed_files"
+
+          # Determine the environment based on the modified directory
+          changed_dir=$(echo "$changed_files" | head -n 1)
+          environment=$(echo "$changed_dir" | cut -d'/' -f2)
+
+          echo "Changes detected in environment: $environment"
+
+          # Set environment-specific secrets dynamically
+          echo "environment=$environment" >> $GITHUB_ENV
+
+      - name: Trigger AWS codedeploy Workflow
+        if: success()  # Only trigger the next workflow if this one succeeds
+        uses: peter-evans/workflow-dispatch@v1
+        with:
+          repository: ${{ github.repository }}  # Change to your repo name
+          workflow: codedeploy.yml  # This is the second workflow file
+          ref: refs/heads/${{ github.head_ref }}  # Use the default branch (or a specific branch)
+          inputs: |
+            environment: ${{ env.environment }}
+            terraform_command_type: 'plan'  # You can change this based on your needs
