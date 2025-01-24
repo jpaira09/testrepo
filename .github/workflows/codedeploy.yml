@@ -27,6 +27,7 @@ jobs:
       #TF_VAR_region: ${{vars.TF_VAR_REGION}}
       TF_VAR_region: ${{secrets.TF_VAR_REGION}}
       ROLE_ARN_DEV: ${{secrets.ROLE_ARN_DEV}}
+      TF_VAR_vpc_name: ${{vars.TF_VAR_VPC_NAME}}
     
     steps:
       - name: Check out repository
